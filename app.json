@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Tirage bien-être",
+    "slug": "tirage-bien-etre",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "tiragebienetre",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "backgroundColor": "#f7f1e6",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.howpass.tirage",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.howpass.tirage",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#229499"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Tirage bien-être HOW PASS",
+      "themeColor": "#229499",
+      "backgroundColor": "#f7f1e6"
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#f7f1e6"
+        }
+      ]
+    ]
+  }
+}
