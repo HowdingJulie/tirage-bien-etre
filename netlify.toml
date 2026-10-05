@@ -1,0 +1,9 @@
+[build]
+  command = "npx expo export --platform web --output-dir dist"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
