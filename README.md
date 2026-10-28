@@ -1,112 +1,49 @@
-# Tirage bien-être HOW PASS
+# HOWPASS · Tirage bien-être
 
-Application séparée (Expo SDK 54 : iPhone, Android et web) : un tirage de carte bien-être **par jour**.
+Site web responsive en React, TypeScript et Vite. Une carte bien-être par jour, avec mélange animé, révélation et son facultatif.
 
-1. Phrase d'intention : *« Univers, donne-moi ce dont j'ai besoin aujourd'hui »*
-2. Mélange visuel du paquet de cartes
-3. Une carte sort du paquet et se retourne : **paillettes dorées + son magique + vibration**
-4. La carte du jour reste affichée jusqu'à minuit (« Reviens demain pour un nouveau tirage »)
+## Lancer le site
 
-Deux types de cartes, tirés à 50 / 50 :
-
-| Type | Nombre | Contenu |
-|---|---|---|
-| **Pratique** (modèle de gauche) | 100 | nom, accroche, « Qu'est-ce que… ? », mantra du jour, exercice en 3 minutes |
-| **Action du jour** (modèle de droite) | 30 | « Aujourd'hui : … », Pourquoi ?, mantra du jour, petite astuce |
-
-Une carte déjà tirée ne ressort pas pendant 30 jours.
-
----
-
-## Lancer l'app
-
-```bash
-cd tirage-bien-etre
+```powershell
+cd C:\Users\olive\Downloads\julie\tirage-bien-etre
 npm install
-npx expo start        # puis scanne le QR code avec l'app Expo Go (iPhone / Android)
-npm run web           # version navigateur
+npm start
 ```
 
----
+Ouvrir http://localhost:8093. Les commandes `npm run dev` et `npm run web` lancent le même site. Le projet est exclusivement web : aucune prévisualisation iOS/Android et aucune dépendance Expo ou React Native.
 
-## 👉 Coller tes URL « Découvrir… sur HowPass »
+## Vérifier et publier
 
-Tout se passe dans **`lib/config.ts`** :
-
-```ts
-export const URL_DECOUVRIR_PRATIQUE = 'https://how-pass.com';      // bouton des cartes pratiques
-export const URL_DECOUVRIR_INSPIRATIONS = 'https://how-pass.com';  // bouton des cartes action du jour
+```powershell
+npm run lint
+npm test
+npm run build
+npm run preview
 ```
 
-- Si l'URL contient `{pratique}`, il est remplacé par le nom de la pratique tirée
-  (ex. `https://how-pass.com/annuaire?q={pratique}` → `…?q=Sophrologie`).
-- Une carte précise peut avoir sa propre URL : ajoute `url: 'https://…'` dans son bloc
-  (fichiers `lib/practices.ts` / `lib/actions.ts`).
+`npm run build` génère `dist/`, prêt à être hébergé comme site statique. Netlify utilise cette commande et publie `dist/` via `netlify.toml`. `npm run preview` sert le build de production sur le même port ; arrêter le serveur de développement avant de le lancer.
 
-Dans le même fichier : la phrase d'intention, la répartition 50/50, les 30 jours sans
-répétition, le son (on/off, et lecture même en mode silencieux sur iPhone).
+## Fonctionnement du tirage
 
----
+- Le tirage est enregistré avant l’animation et reste identique jusqu’à minuit, selon la date locale du navigateur.
+- Les clés `tirage:today` et `tirage:history`, ainsi que leur format JSON, sont conservés pour retrouver les tirages de l’ancienne version web sur la même origine.
+- Les cartes récentes sont exclues pendant 30 jours ; les deux catégories gardent leur répartition 50/50. Si toute une catégorie a été tirée, son contenu redevient disponible.
+- Les autres onglets et les retours sur le site sont synchronisés. Si le stockage est bloqué, la carte reste disponible pendant la session, sans garantie après fermeture.
+- L’animation respecte `prefers-reduced-motion`. Le bouton de son permet de couper l’effet sonore avant le tirage.
 
-## Modifier ou ajouter des cartes
+## Contenu et configuration
 
-- `lib/practices.ts` : les 100 cartes pratiques
-- `lib/actions.ts` : les 30 cartes action du jour
+- `lib/config.ts` : liens « Découvrir… », phrase d’intention, proportions, durée sans répétition et activation du son.
+- `lib/practices.ts`, `lib/actions.ts` : catalogue des cartes. Les identifiants et textes existants sont conservés.
+- `lib/deck.ts` : correspondance des photos, accroches et URL. Une carte peut définir son propre `image` (URL importée ou distante) et son propre `url`.
+- `styles.css` : couleurs, typographie, fond photographique couvrant toute la section, disposition et animations.
+- `cards.css`, `components/CardOrnaments.tsx` : cartes ivoire, filets dorés, ornements botaniques et étoiles, au recto comme au verso.
+- `App.tsx` : interface du tirage ; `components/CardFace.tsx` : face des cartes.
 
-Copie un bloc `p({ ... })` ou `a({ ... })`, change les textes, garde un `id` unique.
+## Identité visuelle
 
-## Photos
+Référence fournie : https://howpass-p1-v7.netlify.app/. Le logo HOWPASS, la police Clemente et la photographie de méditation viennent de cette référence. Palette : bleu canard `#1a7378`, bleu profond `#124f53`, olive `#6f6714`, blanc cassé `#f9f9f7`. Inter est embarquée localement ; les polices WOFF2 sont limitées aux caractères latins utilisés par le site. Les icônes sont des SVG intégrés et les animations utilisent CSS.
 
-Chaque carte a une `category` qui choisit sa photo (`CATEGORY_IMAGES` dans `lib/deck.ts`,
-images dans `assets/images/`). Pour une photo propre à une carte, ajoute dans son bloc :
+Le son `assets/sounds/magic-reveal.wav` est synthétisé par `scripts/generate-magic-sound.py`. Il est chargé uniquement au premier tirage avec son activé. Les photos des cartes existantes sont conservées.
 
-```ts
-image: require('../assets/images/ma-photo.jpg'),
-```
-
-## Son
-
-`assets/sounds/magic-reveal.wav` est **synthétisé par script** (aucun son externe, libre de droits).
-Pour le régénérer ou le modifier : `npm run generate-sound` (script `scripts/generate-magic-sound.py`).
-Tu peux aussi remplacer le fichier par ton propre son (même nom).
-
-## Tester plusieurs tirages le même jour
-
-En mode développement (`npx expo start`), un bouton **« ↺ Réinitialiser le tirage (mode dev) »**
-apparaît sous la carte. Il n'existe pas dans l'app publiée.
-
----
-
-## Publier
-
-- **Web** : `npx expo export --platform web` → le dossier `dist/` se met sur n'importe quel
-  hébergement statique.
-- **iOS / Android** : `npx eas-cli@latest build` (identifiant `com.howpass.tirage`, à ajuster dans
-  `app.json` si besoin). `expo-audio` est un module natif : il faut un build EAS, une simple
-  mise à jour OTA d'une autre app ne suffit pas.
-
----
-
-## Structure
-
-```
-App.tsx                      chargement des polices + carte du jour
-components/
-  DrawScreen.tsx             l'écran : intro → mélange → révélation → carte du jour
-  ShuffleDeck.tsx            paquet + animation de mélange
-  FlipCard.tsx               carte qui grandit, se retourne puis se déplie
-  Sparkles.tsx               explosion de paillettes + halo doré
-  Twinkles.tsx               étoiles qui scintillent en fond
-  CardBack.tsx               dos de carte
-  PracticeCardFront.tsx      carte pratique (modèle de gauche)
-  ActionCardFront.tsx        carte action du jour (modèle de droite)
-  CardParts.tsx              éléments communs (logo, rubriques, mantra, bouton)
-lib/
-  config.ts                  ⚙️ réglages + URL à coller
-  practices.ts / actions.ts  contenu des cartes
-  deck.ts                    photos, accroches, URL
-  draw.ts                    tirage du jour + historique (stocké sur le téléphone)
-  feedback.ts                son + vibrations
-```
-
-Les propositions de bien-être ne remplacent pas un avis médical (mention affichée sous la carte).
+Les propositions de bien-être ne remplacent pas un avis médical.

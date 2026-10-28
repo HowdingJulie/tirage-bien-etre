@@ -1,20 +1,28 @@
-import type { ImageSourcePropType } from 'react-native';
+import souffleImage from '../assets/images/souffle.jpg';
+import meditationImage from '../assets/images/meditation.jpg';
+import soinImage from '../assets/images/soin.jpg';
+import mouvementImage from '../assets/images/mouvement.jpg';
+import natureImage from '../assets/images/nature.jpg';
+import eauImage from '../assets/images/eau.jpg';
+import accompagnementImage from '../assets/images/accompagnement.jpg';
+import coconImage from '../assets/images/cocon.jpg';
+import lienImage from '../assets/images/lien.jpg';
 import { ACTIONS } from './actions';
 import { URL_DECOUVRIR_INSPIRATIONS, URL_DECOUVRIR_PRATIQUE } from './config';
 import { PRACTICES } from './practices';
 import type { Category, WellbeingCard } from './types';
 
 /** Photo affichée en haut de la carte, selon sa catégorie. */
-export const CATEGORY_IMAGES: Record<Category, ImageSourcePropType> = {
-    souffle: require('../assets/images/souffle.jpg'),
-    meditation: require('../assets/images/meditation.jpg'),
-    soin: require('../assets/images/soin.jpg'),
-    mouvement: require('../assets/images/mouvement.jpg'),
-    nature: require('../assets/images/nature.jpg'),
-    eau: require('../assets/images/eau.jpg'),
-    accompagnement: require('../assets/images/accompagnement.jpg'),
-    cocon: require('../assets/images/cocon.jpg'),
-    lien: require('../assets/images/lien.jpg'),
+export const CATEGORY_IMAGES: Record<Category, string> = {
+    souffle: souffleImage,
+    meditation: meditationImage,
+    soin: soinImage,
+    mouvement: mouvementImage,
+    nature: natureImage,
+    eau: eauImage,
+    accompagnement: accompagnementImage,
+    cocon: coconImage,
+    lien: lienImage,
 };
 
 /** Phrases d'accroche des cartes pratiques (une est choisie selon la carte). */
@@ -35,7 +43,7 @@ export function findCard(id: string): WellbeingCard | undefined {
     return BY_ID.get(id);
 }
 
-export function getCardImage(card: WellbeingCard): ImageSourcePropType {
+export function getCardImage(card: WellbeingCard): string {
     return card.image ?? CATEGORY_IMAGES[card.category];
 }
 
