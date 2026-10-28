@@ -1,5 +1,3 @@
-import type { ImageSourcePropType } from 'react-native';
-
 /**
  * Catégorie d'une carte : elle choisit la photo affichée en haut de la carte
  * (voir CATEGORY_IMAGES dans lib/deck.ts).
@@ -34,8 +32,8 @@ export type PracticeCard = {
     hook?: string;
     /** URL propre à cette carte (facultatif). */
     url?: string;
-    /** Photo propre à cette carte (facultatif), ex : require('../assets/images/ma-photo.jpg'). */
-    image?: ImageSourcePropType;
+    /** Photo propre à cette carte (facultatif), ex : une URL ou un import d’image. */
+    image?: string;
 };
 
 /** Carte « action du jour » (modèle de droite : une action à faire aujourd'hui). */
@@ -52,7 +50,7 @@ export type ActionCard = {
     /** Petite astuce. */
     tip: string;
     url?: string;
-    image?: ImageSourcePropType;
+    image?: string;
 };
 
 export type WellbeingCard = PracticeCard | ActionCard;

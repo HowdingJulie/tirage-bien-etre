@@ -1,0 +1,73 @@
+/* Ivory botanical cards, adapted from the supplied front and back references. */
+.wellbeing-card,.card-back{
+    --card-paper:#fbf2df;
+    --card-gold:#bb914c;
+    --card-teal:#26777b;
+    position:relative;
+    isolation:isolate;
+    background:radial-gradient(ellipse at 25% 10%,#fffaf0 0%,#fbf2df 54%,#f2e3c8 100%);
+    border:1px solid #d2ad6d;
+    border-radius:18px;
+    box-shadow:0 4px 0 #e6d1aa,0 8px 18px #60451f26;
+    color:#425353;
+}
+.wellbeing-card::before,.wellbeing-card::after,.card-back::before,.card-back::after{
+    content:'';position:absolute;inset:6px;border:1px solid var(--card-gold);border-radius:12px;pointer-events:none;z-index:2;
+}
+.wellbeing-card::after,.card-back::after{inset:11px;border-color:#cba565a6;border-radius:8px}
+.card-ornaments{position:absolute;inset:0;display:block;pointer-events:none;z-index:1;color:var(--card-teal)}
+.botanical-corner{position:absolute;width:78px;height:78px;display:block}
+.botanical-corner svg{width:100%;height:100%;display:block}
+.top-left{left:16px;top:16px;transform:scaleY(-1)}
+.top-right{right:16px;top:16px;transform:scale(-1,-1)}
+.bottom-left{left:16px;bottom:16px}
+.bottom-right{right:16px;bottom:16px;transform:scaleX(-1)}
+.card-north-star{position:absolute;left:50%;width:30px;height:36px;transform:translateX(-50%)}
+.star-top{top:19px}.star-bottom{bottom:18px;width:25px;height:30px}
+.wellbeing-card{padding:92px 24px 56px;overflow:hidden}
+.card-daily-heading{font-family:Georgia,'Times New Roman',serif;font-size:27px;line-height:1.25;color:var(--card-teal);text-align:center;margin:0 0 22px;position:relative;z-index:1}
+.wellbeing-card .card-photo{height:210px;margin:0 12px;border:2px solid var(--card-gold);border-radius:0;position:relative;z-index:1;background:#fffdf7;box-shadow:0 0 0 3px #fffbf15c}
+.wellbeing-card .card-photo::after{display:none}
+.card-photo-image{width:100%;height:100%;object-fit:cover}
+.card-message-title{position:relative;z-index:1;font-family:Georgia,'Times New Roman',serif;font-size:25px;line-height:1.25;font-weight:400;color:var(--card-teal);text-align:center;margin:20px 7px 0;overflow-wrap:anywhere;text-wrap:balance}
+.card-message-title span{display:block;font-size:17px;margin-bottom:6px;font-style:italic}
+.wellbeing-card .card-hook{font-size:12px;font-weight:400;line-height:1.6;color:#4b6261;padding:12px 4px 0}
+.wellbeing-card .card-content{padding:0 0 8px;position:relative;z-index:1}
+.wellbeing-card .card-section{grid-template-columns:23px minmax(0,1fr);gap:9px;margin-top:20px;color:var(--card-teal)}
+.wellbeing-card .card-section>.icon{width:23px;height:23px}
+.wellbeing-card .card-section.olive{color:#8c6a31}
+.wellbeing-card .card-section h3{font-size:10px;letter-spacing:.08em;font-weight:600}
+.wellbeing-card .card-section p{font-size:12px;line-height:1.6;color:#425353}
+.wellbeing-card blockquote{font-family:Georgia,'Times New Roman',serif;font-size:19px;font-style:italic;line-height:1.45;background:transparent;border-top:1px solid #c4aa7466;border-bottom:1px solid #c4aa7466;border-radius:0;padding:10px 0;color:var(--card-teal)}
+.wellbeing-card .card-cta{font-size:11px;border-radius:8px;background:#26777b;box-shadow:none;margin-top:22px;min-height:50px;padding:10px}
+.wellbeing-card .card-cta:hover{background:#195d61}
+.card-signature{width:112px;height:auto;margin:18px auto 0;mix-blend-mode:multiply}
+.card-back{display:flex;align-items:center;justify-content:center;gap:0;height:100%;padding:44px 20px}
+.card-back .botanical-corner{width:50px;height:50px}
+.card-back .top-left{left:13px;top:13px}.card-back .top-right{right:13px;top:13px}
+.card-back .bottom-left{left:13px;bottom:13px}.card-back .bottom-right{right:13px;bottom:13px}
+.card-back .star-top{top:20px;width:25px;height:30px}
+.card-back .star-bottom{bottom:19px;width:18px;height:22px}
+.back-emblem{display:block;width:108px;height:126px;background:#318b8d;mask:url('./assets/brand/symbol-white.png') center/contain no-repeat;filter:drop-shadow(0 1px 0 #c9a46d)}
+.deck{width:208px;height:286px}
+.deck-layer{filter:drop-shadow(0 4px 4px #59432126)}
+.deck-button{inset:100px 8% 0}
+.card-stage:not(.is-today):not(.is-revealing){min-height:400px}
+@media(max-width:899px){
+    .wellbeing-card{padding:86px 22px 54px}
+    .card-daily-heading{font-size:25px}
+    .wellbeing-card .card-photo{margin-inline:9px;height:200px}
+    .botanical-corner{width:67px;height:67px}
+}
+@media(max-width:359px){
+    .wellbeing-card{padding:76px 20px 50px}
+    .card-daily-heading{font-size:21px;margin-bottom:18px}
+    .wellbeing-card .card-photo{margin-inline:4px;height:164px}
+    .card-message-title{font-size:22px;margin-inline:0}
+    .botanical-corner{width:54px;height:54px}
+    .wellbeing-card .card-section{grid-template-columns:18px minmax(0,1fr);gap:7px}
+    .wellbeing-card .card-section>.icon{width:18px;height:18px}
+    .wellbeing-card .card-section p{font-size:11px}
+    .wellbeing-card blockquote{font-size:17px}
+    .wellbeing-card .card-cta{font-size:10px}
+}

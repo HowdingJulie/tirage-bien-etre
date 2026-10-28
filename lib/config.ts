@@ -32,6 +32,3 @@ export const JOURS_SANS_REPETITION = 30;
 
 /** Son magique au retournement de la carte. */
 export const SON_ACTIVE = true;
-
-/** iPhone : jouer le son même quand le téléphone est en mode silencieux. */
-export const SON_MEME_EN_MODE_SILENCIEUX = false;

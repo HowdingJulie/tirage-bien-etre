@@ -1,27 +1,35 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ACTIONS } from './actions';
 import { JOURS_SANS_REPETITION, PROBA_PRATIQUE } from './config';
 import { findCard } from './deck';
 import { PRACTICES } from './practices';
 import type { WellbeingCard } from './types';
 
-/**
- * Tirage « une carte par jour », mémorisé sur le téléphone.
- *   - tirage:today   → { date, cardId } : la carte du jour
- *   - tirage:history → [{ date, cardId }] : les tirages récents (anti-répétition)
- */
+// Same keys and JSON as the original web app: existing draws survive the migration.
 const TODAY_KEY = 'tirage:today';
 const HISTORY_KEY = 'tirage:history';
-const HISTORY_MAX = 120;
-
 type DrawEntry = { date: string; cardId: string };
+export type DrawStorage = Pick<Storage, 'getItem' | 'setItem'>;
+let sessionEntry: DrawEntry | null = null;
+const fallbackEntries = new WeakMap<DrawStorage, DrawEntry>();
 
-/** Date locale du jour au format AAAA-MM-JJ. */
+function browserStorage(): DrawStorage | null {
+    try { return typeof window === 'undefined' ? null : window.localStorage; }
+    catch { return null; }
+}
+
+function readJson(key: string, storage: DrawStorage | null): unknown {
+    try { return JSON.parse(storage?.getItem(key) ?? 'null'); }
+    catch { return null; }
+}
+
+function isEntry(value: unknown): value is DrawEntry {
+    return !!value && typeof value === 'object' && 'date' in value && 'cardId' in value
+        && typeof value.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.date)
+        && typeof value.cardId === 'string';
+}
+
 export function todayKey(now = new Date()): string {
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 function daysBetween(a: string, b: string): number {
@@ -30,68 +38,37 @@ function daysBetween(a: string, b: string): number {
     return Math.round((Date.UTC(yb, mb - 1, db) - Date.UTC(ya, ma - 1, da)) / 86_400_000);
 }
 
-async function readJson<T>(key: string, fallback: T): Promise<T> {
-    try {
-        const raw = await AsyncStorage.getItem(key);
-        return raw ? (JSON.parse(raw) as T) : fallback;
-    } catch {
-        return fallback;
-    }
+export function loadTodayCard(now = new Date(), storage = browserStorage()): WellbeingCard | null {
+    const saved = readJson(TODAY_KEY, storage);
+    const entry = isEntry(saved) ? saved : storage ? fallbackEntries.get(storage) : sessionEntry;
+    return entry?.date === todayKey(now) ? findCard(entry.cardId) ?? null : null;
 }
 
-async function writeJson(key: string, value: unknown): Promise<void> {
-    try {
-        await AsyncStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-        console.warn('[tirage] sauvegarde impossible', e);
-    }
-}
-
-/** La carte déjà tirée aujourd'hui, ou null si aucun tirage aujourd'hui. */
-export async function loadTodayCard(): Promise<WellbeingCard | null> {
-    const entry = await readJson<DrawEntry | null>(TODAY_KEY, null);
-    if (!entry || entry.date !== todayKey()) return null;
-    return findCard(entry.cardId) ?? null;
-}
-
-/**
- * Tire la carte du jour et l'enregistre immédiatement
- * (fermer l'app pendant l'animation ne permet donc pas de retirer).
- * Si une carte a déjà été tirée aujourd'hui, c'est elle qui est renvoyée.
- */
-export async function drawTodayCard(): Promise<WellbeingCard> {
-    const existing = await loadTodayCard();
+/** Save immediately, before animation; drawing again returns the same card. */
+export function drawTodayCard(now = new Date(), random = Math.random, storage = browserStorage()): WellbeingCard {
+    const existing = loadTodayCard(now, storage);
     if (existing) return existing;
-
-    const today = todayKey();
-    const history = await readJson<DrawEntry[]>(HISTORY_KEY, []);
-    const recent = new Set(
-        history
-            .filter((h) => daysBetween(h.date, today) < JOURS_SANS_REPETITION)
-            .map((h) => h.cardId),
-    );
-
-    const deck: WellbeingCard[] = Math.random() < PROBA_PRATIQUE ? PRACTICES : ACTIONS;
-    const fresh = deck.filter((c) => !recent.has(c.id));
-    const pool = fresh.length > 0 ? fresh : deck;
-    const card = pool[Math.floor(Math.random() * pool.length)];
-
-    const entry: DrawEntry = { date: today, cardId: card.id };
-    await writeJson(TODAY_KEY, entry);
-    await writeJson(HISTORY_KEY, [entry, ...history].slice(0, HISTORY_MAX));
+    const saved = readJson(HISTORY_KEY, storage);
+    const history = Array.isArray(saved) ? saved.filter(isEntry) : [];
+    const today = todayKey(now);
+    const recent = new Set(history.filter(h => {
+        const age = daysBetween(h.date, today);
+        return age >= 0 && age < JOURS_SANS_REPETITION;
+    }).map(h => h.cardId));
+    const deck: WellbeingCard[] = random() < PROBA_PRATIQUE ? PRACTICES : ACTIONS;
+    const fresh = deck.filter(c => !recent.has(c.id));
+    const pool = fresh.length ? fresh : deck;
+    const card = pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
+    const entry = { date: today, cardId: card.id };
+    if (storage) fallbackEntries.set(storage, entry);
+    else sessionEntry = entry;
+    try {
+        storage?.setItem(TODAY_KEY, JSON.stringify(entry));
+        storage?.setItem(HISTORY_KEY, JSON.stringify([entry, ...history].slice(0, 120)));
+    } catch { /* The current tab still retains its draw if storage is unavailable. */ }
     return card;
 }
 
-/** Mode développement uniquement : efface la carte du jour pour pouvoir retirer. */
-export async function resetTodayForDev(): Promise<void> {
-    try {
-        await AsyncStorage.removeItem(TODAY_KEY);
-    } catch {
-        // ignoré
-    }
-}
-
-/** Millisecondes restantes avant minuit (heure locale). */
 export function msUntilMidnight(now = new Date()): number {
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);

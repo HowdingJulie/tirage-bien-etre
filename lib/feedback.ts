@@ -1,45 +1,29 @@
-import * as Haptics from 'expo-haptics';
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
-import { useCallback, useEffect } from 'react';
-import { Platform } from 'react-native';
-import { SON_ACTIVE, SON_MEME_EN_MODE_SILENCIEUX } from './config';
+import magicSound from '../assets/sounds/magic-reveal.wav';
+import { SON_ACTIVE } from './config';
 
-const magicSound = require('../assets/sounds/magic-reveal.wav');
+let context: AudioContext | null = null;
+let buffer: Promise<AudioBuffer | null> | null = null;
 
-/** Vibration légère (ignorée sur le web ou si indisponible). */
-export function haptic(kind: 'light' | 'medium' | 'success') {
-    if (Platform.OS === 'web') return;
-    const run =
-        kind === 'success'
-            ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-            : Haptics.impactAsync(
-                  kind === 'medium'
-                      ? Haptics.ImpactFeedbackStyle.Medium
-                      : Haptics.ImpactFeedbackStyle.Light,
-              );
-    run.catch(() => {});
+/** Called by the draw button's user gesture; sound is fetched only when needed. */
+export function prepareMagicSound() {
+    if (!SON_ACTIVE || !window.AudioContext) return;
+    try {
+        context ??= new AudioContext();
+        void context.resume().catch(() => {});
+        const audio = context;
+        buffer ??= fetch(magicSound).then(r => r.arrayBuffer()).then(data => audio.decodeAudioData(data)).catch(() => null);
+    } catch { /* Sound is optional. */ }
 }
 
-/** Renvoie une fonction qui joue le son magique du retournement de carte. */
-export function useMagicSound() {
-    const player = useAudioPlayer(magicSound);
-
-    useEffect(() => {
-        setAudioModeAsync({
-            playsInSilentMode: SON_MEME_EN_MODE_SILENCIEUX,
-            interruptionMode: 'mixWithOthers',
-        }).catch(() => {});
-    }, []);
-
-    return useCallback(() => {
-        if (!SON_ACTIVE) return;
-        try {
-            // expo-audio ne rembobine pas automatiquement : on revient au début avant de jouer.
-            void Promise.resolve(player.seekTo(0)).catch(() => {});
-            player.play();
-        } catch (e) {
-            // Le son est un bonus : s'il échoue, la carte s'affiche quand même.
-            console.warn('[tirage] son indisponible', e);
-        }
-    }, [player]);
+export async function playMagicSound() {
+    const decoded = await buffer;
+    if (!decoded || !context || context.state !== 'running') return;
+    try {
+        const source = context.createBufferSource();
+        source.buffer = decoded;
+        const gain = context.createGain();
+        gain.gain.value = 0.4;
+        source.connect(gain).connect(context.destination);
+        source.start();
+    } catch { /* The card remains usable without audio. */ }
 }
